@@ -2,12 +2,12 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
 	_ "github.com/lib/pq"
@@ -37,12 +37,13 @@ func main() {
 
 	estacoes, err := QueryStations(db)
 
-	jsonData, err := json.MarshalIndent(estacoes, "", "  ")
-	if err != nil {
-		log.Fatal(err)
-	}
+	router := gin.Default()
 
-	fmt.Println(string(jsonData))
+	router.GET("/stations", func(c *gin.Context) {
+		c.JSON(200, estacoes)
+	})
+
+	router.Run()
 
 }
 
