@@ -23,6 +23,14 @@ type Estacao struct {
 	EmUso            bool       `json:"emuso"`
 }
 
+type Data struct {
+	ID          int        `json:"id"`
+	Temperatura float64    `json:"temperatura"`
+	Umidade     float64    `json:"umidade"`
+	DataHora    *time.Time `json:"datahora"`
+	Estacao_FK  int        `json:estacao_fk`
+}
+
 func main() {
 
 	if err := godotenv.Load(".env"); err != nil {
@@ -37,10 +45,16 @@ func main() {
 
 	estacoes, err := QueryStations(db)
 
+	data, err := QueryDataStations(db)
+
 	router := gin.Default()
 
 	router.GET("/stations", func(c *gin.Context) {
 		c.JSON(200, estacoes)
+	})
+
+	router.GET("/data", func(c *gin.Context) {
+		c.JSON(200, data)
 	})
 
 	router.Run()
@@ -106,4 +120,38 @@ func QueryStations(db *sql.DB) ([]Estacao, error) {
 	}
 
 	return estacoes, nil
+}
+
+func QueryDataStations(db *sql.DB) ([]Data, error) {
+	rows, err := db.Query("SELECT * from registros_estacoes")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer rows.Close()
+	var all_data []Data
+
+	for rows.Next() {
+		var data Data
+
+		var datahora sql.NullTime
+
+		err := rows.Scan(&data.ID, &data.Temperatura, &data.Umidade, &datahora, &data.Estacao_FK)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if datahora.Valid {
+			data.DataHora = &datahora.Time
+		}
+
+		all_data = append(all_data, data)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return all_data, nil
 }
