@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"database/sql"
@@ -6,9 +6,6 @@ import (
 	"log"
 	"os"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 
 	_ "github.com/lib/pq"
 )
@@ -29,36 +26,6 @@ type Data struct {
 	Umidade     float64    `json:"umidade"`
 	DataHora    *time.Time `json:"datahora"`
 	Estacao_FK  int        `json:estacao_fk`
-}
-
-func main() {
-
-	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	db, err := DatabaseConn()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	estacoes, err := QueryStations(db)
-
-	data, err := QueryDataStations(db)
-
-	router := gin.Default()
-
-	router.GET("/stations", func(c *gin.Context) {
-		c.JSON(200, estacoes)
-	})
-
-	router.GET("/data", func(c *gin.Context) {
-		c.JSON(200, data)
-	})
-
-	router.Run()
-
 }
 
 func DatabaseConn() (*sql.DB, error) {
